@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>USPão de forma</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #0C0A07;
+  --bg2:       #161109;
+  --bg3:       #1E1710;
+  --border:    rgba(239,159,39,0.12);
+  --border2:   rgba(239,159,39,0.25);
+  --amber:     #EF9F27;
+  --amber2:    #F5C842;
+  --amber-dim: #BA7517;
+  --cream:     #F2E8D0;
+  --muted:     #7A6A52;
+  --muted2:    #4A3E2E;
+  --green:     #4ADE80;
+  --idle:      #FAB20A;
+  --dnd:       #F87171;
+  --stream:    #A78BFA;
+}
+
+html, body {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--cream);
+  font-family: 'Syne', sans-serif;
+  overflow-x: hidden;
+}
+
+/* ── CANVAS BACKGROUND ── */
+#bg-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ── GLOW ── */
+.glow-blob {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(120px);
+  pointer-events: none;
+  z-index: 0;
+}
+.glow-blob.a {
+  width: 500px; height: 500px;
+  background: rgba(239,159,39,0.08);
+  top: -100px; left: -100px;
+  animation: blobA 12s ease-in-out infinite alternate;
+}
+.glow-blob.b {
+  width: 400px; height: 400px;
+  background: rgba(245,200,66,0.05);
+  bottom: -80px; right: -80px;
+  animation: blobB 15s ease-in-out infinite alternate;
+}
+@keyframes blobA { to { transform: translate(60px, 80px); } }
+@keyframes blobB { to { transform: translate(-60px, -60px); } }
+
+/* ── LAYOUT ── */
+.page {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  gap: 1.5rem;
+}
+
+/* ── HEADER ── */
+.header {
+  text-align: center;
+  animation: fadeDown 0.7s cubic-bezier(.16,1,.3,1) both;
+}
+
+.server-icon {
+  width: 88px; height: 88px;
+  border-radius: 28px;
+  background: var(--bg3);
+  border: 1.5px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 44px;
+  margin: 0 auto 1rem;
+  position: relative;
+  animation: toastPop 0.8s cubic-bezier(.34,1.56,.64,1) 0.2s both;
+  box-shadow: 0 0 40px rgba(239,159,39,0.15), inset 0 1px 0 rgba(239,159,39,0.1);
+}
+
+.server-icon::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 28px;
+  background: linear-gradient(135deg, rgba(239,159,39,0.3) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.live-badge {
+  position: absolute;
+  top: -6px; right: -6px;
+  background: var(--green);
+  border: 2px solid var(--bg);
+  border-radius: 99px;
+  width: 18px; height: 18px;
+  animation: pulse-ring 2s ease-in-out infinite;
+}
+
+@keyframes pulse-ring {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(74,222,128,0.6); }
+  50%       { box-shadow: 0 0 0 6px rgba(74,222,128,0); }
+}
+
+.server-name {
+  font-size: clamp(2rem, 6vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  background: linear-gradient(135deg, var(--amber2) 0%, var(--amber) 50%, #C8770F 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.4rem;
+}
+
+.server-sub {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.server-sub span {
+  color: var(--amber-dim);
+  margin: 0 6px;
+}
+
+/* ── DIVIDER ── */
+.divider {
+  width: 280px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border2), transparent);
+  animation: fadeIn 0.8s 0.5s both;
+}
+
+/* ── CARD ── */
+.card {
+  width: 100%;
+  max-width: 460px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+  animation: fadeUp 0.7s cubic-bezier(.16,1,.3,1) 0.3s both;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(239,159,39,0.04);
+}
+
+/* ── STATS BAR ── */
+.stats-bar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 14px 0;
+  gap: 3px;
+  position: relative;
+}
+
+.stat + .stat::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 20%; bottom: 20%;
+  width: 1px;
+  background: var(--border);
+}
+
+.stat-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--amber);
+  line-height: 1;
+  min-width: 2ch;
+  text-align: center;
+}
+
+.stat-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* ── SECTION LABEL ── */
+.section-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 12px 18px 8px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-label::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse-ring 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+/* ── MEMBERS ── */
+#members-list {
+  min-height: 80px;
+}
+
+.member-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+  animation: memberIn 0.5s cubic-bezier(.16,1,.3,1) both;
+  cursor: default;
+}
+
+.member-row:last-child { border-bottom: none; }
+.member-row:hover { background: var(--bg3); }
+
+.avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--bg3);
+  border: 1.5px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--amber);
+  overflow: hidden;
+}
+
+.avatar img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.status-dot {
+  position: absolute;
+  bottom: -1px; right: -1px;
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  border: 2px solid var(--bg2);
+}
+
+.member-info { flex: 1; min-width: 0; }
+
+.member-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--cream);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.member-activity {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+
+.status-tag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 99px;
+  border: 1px solid;
+  flex-shrink: 0;
+}
+
+/* ── EMPTY / LOADING / ERROR ── */
+.state-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  gap: 8px;
+  color: var(--muted);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  text-align: center;
+  min-height: 100px;
+}
+
+.state-box .icon { font-size: 28px; margin-bottom: 4px; }
+
+.spinner {
+  width: 20px; height: 20px;
+  border: 2px solid var(--border2);
+  border-top-color: var(--amber);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+/* ── FOOTER BUTTONS ── */
+.card-footer {
+  display: flex;
+  gap: 10px;
+  padding: 14px 18px;
+  border-top: 1px solid var(--border);
+}
+
+.btn-join {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: var(--amber);
+  color: #1A0F00;
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.btn-join:hover  { background: var(--amber2); }
+.btn-join:active { transform: scale(0.97); }
+
+.btn-discord-icon {
+  width: 18px; height: 18px;
+  fill: #1A0F00;
+}
+
+.btn-refresh {
+  width: 42px; height: 42px;
+  border-radius: 12px;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  color: var(--muted);
+  font-size: 18px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, transform 0.3s;
+}
+
+.btn-refresh:hover { background: var(--bg); color: var(--amber); }
+.btn-refresh.spinning { animation: spin 0.5s linear; }
+
+/* ── TIMESTAMP ── */
+.timestamp {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--muted2);
+  animation: fadeIn 0.6s 0.8s both;
+  text-align: center;
+}
+
+/* ── GRAIN OVERLAY ── */
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-size: 200px;
+}
+
+/* ── KEYFRAMES ── */
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes toastPop {
+  from { opacity: 0; transform: scale(0.6) translateY(10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes memberIn {
+  from { opacity: 0; transform: translateX(-12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="glow-blob a"></div>
+<div class="glow-blob b"></div>
+<canvas id="bg-canvas"></canvas>
+<div class="grain"></div>
+
+<main class="page">
+
+  <header class="header">
+    <div class="server-icon">
+      🍞
+      <div class="live-badge"></div>
+    </div>
+    <h1 class="server-name">USPão de forma</h1>
+    <p class="server-sub">EEL <span>·</span> USP São Carlos</p>
+  </header>
+
+  <div class="divider"></div>
+
+  <div class="card">
+    <div class="stats-bar">
+      <div class="stat">
+        <span class="stat-num" id="count-online">—</span>
+        <span class="stat-label">online</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num" id="count-voice">—</span>
+        <span class="stat-label">em voz</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num" id="count-channels">—</span>
+        <span class="stat-label">canais</span>
+      </div>
+    </div>
+
+    <div class="section-label">membros online agora</div>
+
+    <div id="members-list">
+      <div class="state-box">
+        <div class="spinner"></div>
+        buscando membros...
+      </div>
+    </div>
+
+    <div class="card-footer">
+      <a id="invite-btn" class="btn-join" href="#" target="_blank">
+        <svg class="btn-discord-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+        </svg>
+        entrar no servidor
+      </a>
+      <button class="btn-refresh" id="refresh-btn" title="Atualizar" aria-label="Atualizar">
+        ↻
+      </button>
+    </div>
+  </div>
+
+  <p class="timestamp" id="last-update"></p>
+
+</main>
+
+<script>
+const API = 'https://discord.com/api/guilds/1504665645902725223/widget.json';
+
+/* ── Floating breadcrumbs ── */
+const canvas = document.getElementById('bg-canvas');
+const ctx    = canvas.getContext('2d');
+const crumbs = [];
+
+function resize() {
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+const CRUMB_CHARS = ['·', '•', '◦', '∘', '⬡', '⬢', '▪', '▫'];
+
+for (let i = 0; i < 38; i++) {
+  crumbs.push({
+    x:     Math.random() * window.innerWidth,
+    y:     Math.random() * window.innerHeight,
+    size:  6 + Math.random() * 10,
+    vx:    (Math.random() - 0.5) * 0.25,
+    vy:   -(0.1 + Math.random() * 0.3),
+    alpha: 0.04 + Math.random() * 0.1,
+    char:  CRUMB_CHARS[Math.floor(Math.random() * CRUMB_CHARS.length)],
+    rot:   Math.random() * Math.PI * 2,
+    rotV:  (Math.random() - 0.5) * 0.005,
+  });
+}
+
+function drawCrumbs() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  for (const c of crumbs) {
+    ctx.save();
+    ctx.globalAlpha = c.alpha;
+    ctx.fillStyle   = '#EF9F27';
+    ctx.font        = `${c.size}px monospace`;
+    ctx.translate(c.x, c.y);
+    ctx.rotate(c.rot);
+    ctx.fillText(c.char, 0, 0);
+    ctx.restore();
+
+    c.x   += c.vx;
+    c.y   += c.vy;
+    c.rot += c.rotV;
+    if (c.y < -20) { c.y = canvas.height + 20; c.x = Math.random() * canvas.width; }
+    if (c.x < -20) c.x = canvas.width + 20;
+    if (c.x > canvas.width + 20) c.x = -20;
+  }
+  requestAnimationFrame(drawCrumbs);
+}
+drawCrumbs();
+
+/* ── Status config ── */
+const STATUS = {
+  online:    { color: '#4ADE80', label: 'online',   borderColor: 'rgba(74,222,128,0.3)' },
+  idle:      { color: '#FAB20A', label: 'ausente',  borderColor: 'rgba(250,178,10,0.3)' },
+  dnd:       { color: '#F87171', label: 'ocupado',  borderColor: 'rgba(248,113,113,0.3)' },
+  streaming: { color: '#A78BFA', label: 'ao vivo',  borderColor: 'rgba(167,139,250,0.3)' },
+  offline:   { color: '#4A3E2E', label: 'offline',  borderColor: 'rgba(74,62,46,0.3)' },
+};
+
+function initials(name) {
+  return (name || '??').slice(0, 2).toUpperCase();
+}
+
+function formatTime(d) {
+  return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+/* ── Render members ── */
+function renderMembers(members) {
+  const list = document.getElementById('members-list');
+  if (!members.length) {
+    list.innerHTML = `<div class="state-box"><div class="icon">😴</div>ninguém online agora</div>`;
+    return;
+  }
+  list.innerHTML = members.map((m, i) => {
+    const st  = STATUS[m.status] || STATUS.online;
+    const avatarHtml = m.avatar_url
+      ? `<img src="${m.avatar_url}" alt="${m.username}" loading="lazy">`
+      : initials(m.username);
+    const actHtml = m.game
+      ? `<div class="member-activity">jogando ${m.game.name}</div>`
+      : '';
+    return `
+      <div class="member-row" style="animation-delay:${i * 60}ms">
+        <div class="avatar-wrap">
+          <div class="avatar">${avatarHtml}</div>
+          <div class="status-dot" style="background:${st.color}"></div>
+        </div>
+        <div class="member-info">
+          <div class="member-name">${m.username}</div>
+          ${actHtml}
+        </div>
+        <span class="status-tag" style="color:${st.color};border-color:${st.borderColor}">${st.label}</span>
+      </div>`;
+  }).join('');
+}
+
+/* ── Fetch ── */
+async function loadWidget() {
+  const list       = document.getElementById('members-list');
+  const onlineEl   = document.getElementById('count-online');
+  const voiceEl    = document.getElementById('count-voice');
+  const channelsEl = document.getElementById('count-channels');
+  const inviteBtn  = document.getElementById('invite-btn');
+  const tsEl       = document.getElementById('last-update');
+  const refreshBtn = document.getElementById('refresh-btn');
+
+  refreshBtn.classList.add('spinning');
+  list.innerHTML = `<div class="state-box"><div class="spinner"></div>buscando membros...</div>`;
+
+  try {
+    const r    = await fetch(API);
+    if (!r.ok) throw new Error(r.status === 403 ? 'widget desativado (403)' : `erro ${r.status}`);
+    const data = await r.json();
+
+    const members  = data.members  || [];
+    const channels = data.channels || [];
+    const inVoice  = members.filter(m => m.channel_id).length;
+
+    onlineEl.textContent   = members.length;
+    voiceEl.textContent    = inVoice;
+    channelsEl.textContent = channels.length || '—';
+
+    if (data.instant_invite) inviteBtn.href = data.instant_invite;
+
+    renderMembers(members);
+    tsEl.textContent = `atualizado às ${formatTime(new Date())}`;
+
+  } catch (e) {
+    onlineEl.textContent = '!';
+    list.innerHTML = `
+      <div class="state-box">
+        <div class="icon">⚠️</div>
+        ${e.message}<br>
+        <span style="font-size:10px;margin-top:4px;display:block;">
+          Servidor → Widget → Ativar widget do servidor
+        </span>
+      </div>`;
+    tsEl.textContent = `falha em ${formatTime(new Date())}`;
+  } finally {
+    setTimeout(() => refreshBtn.classList.remove('spinning'), 500);
+  }
+}
+
+document.getElementById('refresh-btn').addEventListener('click', loadWidget);
+loadWidget();
+setInterval(loadWidget, 60000);
+</script>
+</body>
+</html>
